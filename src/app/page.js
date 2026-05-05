@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Icon } from "@iconify/react";
 
 export default function Home() {
@@ -9,6 +9,23 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState("");
+  const [contentAsignatures, setContentAsignatues] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+
+
+  useEffect(() => {
+    signatures.forEach((_, index) => {
+      // Recorrer cada badge y agregar clase
+      setTimeout(() => {
+        setActiveIndex(index);
+      }, (index + 1) * 150);
+
+      //Apagar
+      setTimeout(() => {
+        setActiveIndex(-1);
+      }, (signatures.length + 1) * 150);
+    });
+  }, [signatures]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -57,14 +74,18 @@ export default function Home() {
     fetchSignatures();
   }, []);
 
+
   const handleSelect = (signature) => {
     setLoading(true);
     setSelectedSignature(signature);
+    setContentAsignatues(true);
 
-    window.scrollTo({
-      top: window.innerHeight,
-      behavior: "smooth",
-    });
+    setTimeout(() => {
+      window.scrollTo({
+        top: window.innerHeight,
+        behavior: "smooth",
+      });
+    }, 100);
   };
 
   const handleReturn = () => {
@@ -73,6 +94,9 @@ export default function Home() {
       behavior: "smooth",
     });
     setSelectedSignature(null);
+    setTimeout(() => {
+      setContentAsignatues(false);
+    }, 500);
   };
 
   const formattedData = useMemo(() => {
@@ -111,7 +135,7 @@ export default function Home() {
   }, [selectedSignature]);
 
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+    <div className="flex flex-col items-center justify-center font-sans dark:bg-black">
       <header
         className={`header fixed top-0 gap-7 items-center md:justify-end justify-between w-full h-16 p-5 z-50 ${selectedSignature ? "flex" : "hidden"}`}
       >
@@ -123,12 +147,11 @@ export default function Home() {
           <span>{selectedSignature ? `${selectedSignature.creditos} Créditos` : ""}</span>
         </div>
 
-
         <button
           onClick={handleReturn}
-          className="bg-white text-black py-2 px-3 gap-2 flex rounded-full items-center font-semibold cursor-pointer"
+          className="bg-white text-black h-11 w-11 flex justify-center rounded-full items-center cursor-pointer"
         >
-          <Icon icon="hugeicons:circle-arrow-up-02" className="size-6"></Icon>
+          <Icon icon="hugeicons:arrow-up-02" className="text-2xl"></Icon>
         </button>
       </header>
 
@@ -137,8 +160,8 @@ export default function Home() {
           <h1 className="font-bold text-white text-4xl md:text-5xl px-5 text-center">
             Cargando materias
           </h1>) : (
-          <h1 className="font-bold text-white text-4xl md:text-5xl px-5 text-center">
-            Selecciona una <br /> Materia
+          <h1 className="font-bold text-white text-3xl md:text-5xl px-5 text-center">
+            Selecciona una Materia
           </h1>
         )}
 
@@ -147,17 +170,18 @@ export default function Home() {
         ) : error ? (
           <p className="text-red-400 text-center px-4">{error}</p>
         ) : (
-          <div className="flex items-center md:justify-center w-screen overflow-auto p-5 snap-mandatory snap-x gap-10">
-            {signatures.map((signature) => (
+          <div className="flex items-center md:justify-center overflow-auto p-5 snap-mandatory snap-x gap-10 w-screen">
+            {signatures.map((signature, index) => (
               <label
                 key={signature.nrc}
-                className={`target badge snap-center cursor-pointer ${selectedSignature?.nombre === signature.nombre ? "selected" : ""}`}
+                className={`target badge snap-center cursor-pointer md:w-68 md:h-68 h-58 min-w-58 text-3xl md:text-[2.5rem] 
+                  ${activeIndex === index ? "badge-hover" : ""}`}
               >
                 <input
                   type="radio"
                   name="signature"
-                  value={signature.nombre}
-                  checked={selectedSignature?.nombre === signature.nombre}
+                  selected={signature.nombre}
+                  checked={activeIndex === index}
                   onChange={() => handleSelect(signature)}
                 />
                 <span className="leading-none">{signature.nombre}</span>
@@ -167,9 +191,9 @@ export default function Home() {
         )}
       </div >
 
-      <div className="min-h-[calc(100vh-64px)] grid md:grid-cols-2 md:grid-rows-2 items-center justify-center relative top-16">
+      {contentAsignatures === true ? (<div id="contentAsignatures" className="min-h-[calc(100vh-64px)] md:grid-cols-2 md:grid-rows-2 items-center justify-center relative top-16 overflow-hidden grid">
         <section className="flex flex-col justify-center items-center">
-          <h1 className="font-bold text-white text-5xl md:text-[8rem] text-center md:text-end leading-none md:max-w-200 max-w-100">
+          <h1 className="font-bold text-white text-5xl md:text-[8rem] text-center md:text-start leading-none md:max-w-200 max-w-100">
             {selectedSignature?.nombre || ""}
           </h1>
         </section>
@@ -195,9 +219,9 @@ export default function Home() {
         </section>
 
         <section
-          className={`col-span-full h-full ${loading ? "loading" : ""}`}
+          className={`col-span-full h-full w-full ${loading ? "loading" : ""}`}
         >
-          <div className="w-screen overflow-auto flex md:justify-center gap-5 px-10 py-5 snap-x snap-mandatory">
+          <div className="flex md:justify-center md:gap-10 gap-5 p-5 snap-x snap-mandatory overflow-auto w-screen">
             <div className="targetS snap-center">
               <Icon icon="hugeicons:meeting-room" className="text-5xl text-white/40" />
               <p className="flex flex-col gap-4 md:text-2xl text-white/40 font-light">
@@ -249,7 +273,7 @@ export default function Home() {
             </div>
           </div>
         </section>
-      </div>
+      </div>) : ('')}
     </div>
   );
 }
